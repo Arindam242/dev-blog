@@ -1,82 +1,54 @@
-import Head from 'next/head'
+import Head from "next/head";
+import {PrismaClient} from "@prisma/client";
+import Link from "next/link";
+import moment from 'moment';
 
-export default function Home() {
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-2">
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+const prisma = new PrismaClient();
 
-      <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">
-        <h1 className="text-6xl font-bold">
-          Welcome to{' '}
-          <a className="text-blue-600" href="https://nextjs.org">
-            Next.js!
-          </a>
-        </h1>
+export default function Home({Posts}) {
+    console.log( moment.utc("2021-09-24T14:37:50.731Z").format("DD/MM"));
+    return (
+        <div className="flex flex-col  min-h-screen">
+            <Head>
+                <title>Dev Blog</title>
+                <link rel="icon" href="/favicon.ico"/>
+            </Head>
+            <header className="w-full h-16 bg-black flex items-center justify-between">
+                <h2 className="text-2xl font-medium text-white mx-10">Dev Blog</h2>
+                <Link href="/Create">
+                    <span className="px-4 py-2 bg-red-600 text-white mx-10">Create</span>
+                </Link>
+            </header>
+            <main className="w-full my-5 max-w-7xl mx-auto">
+                {Posts.map((post, i) => (
+                    <div
+                        key={post.id}
+                        className="w-full p-10 cursor-pointer hover:translate-y-5 h-auto rounded-md shadow-lg hover:shadow-2xl transition-all space-y-3"
+                    >
+                        <h2 className="text-2xl font-medium">{post.title}</h2>
+                        <p className="text-gray-600">{post.content}</p>
+                        <div>
 
-        <p className="mt-3 text-2xl">
-          Get started by editing{' '}
-          <code className="p-3 font-mono text-lg bg-gray-100 rounded-md">
-            pages/index.js
-          </code>
-        </p>
+                            <p className="text-gray-900">{Posts[i].author.name}</p>
+                            <p className={"text-gray-400"}>{ moment.utc(post.createdAt).format("MMM Do , yyy")}</p>
+                        </div>
 
-        <div className="flex flex-wrap items-center justify-around max-w-4xl mt-6 sm:w-full">
-          <a
-            href="https://nextjs.org/docs"
-            className="p-6 mt-6 text-left border w-96 rounded-xl hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Documentation &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Find in-depth information about Next.js features and API.
-            </p>
-          </a>
-
-          <a
-            href="https://nextjs.org/learn"
-            className="p-6 mt-6 text-left border w-96 rounded-xl hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Learn &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Learn about Next.js in an interactive course with quizzes!
-            </p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className="p-6 mt-6 text-left border w-96 rounded-xl hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Examples &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Discover and deploy boilerplate example Next.js projects.
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className="p-6 mt-6 text-left border w-96 rounded-xl hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Deploy &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
+                    </div>
+                ))}
+            </main>
         </div>
-      </main>
+    );
+}
 
-      <footer className="flex items-center justify-center w-full h-24 border-t">
-        <a
-          className="flex items-center justify-center"
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className="h-4 ml-2" />
-        </a>
-      </footer>
-    </div>
-  )
+export async function getServerSideProps() {
+    const Posts = await prisma.post.findMany({
+        include: {
+            author: true,
+        },
+    });
+    return {
+        props: {
+            Posts: Posts,
+        },
+    };
 }
